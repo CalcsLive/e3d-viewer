@@ -117,8 +117,8 @@ onMounted(async () => {
         </NuxtLink>
       </div>
 
-      <!-- Metadata panel - positioned above the control panel at bottom-right -->
-      <div class="absolute bottom-64 right-4 z-10">
+      <!-- Metadata panel - positioned at bottom-right corner -->
+      <div class="absolute bottom-4 right-4 z-10">
         <div class="bg-gray-800 text-white px-3 py-2 rounded shadow max-w-xs">
           <h3 v-if="metadata" class="font-semibold text-sm mb-1 truncate" :title="metadata.original_filename">
             {{ metadata.original_filename }}

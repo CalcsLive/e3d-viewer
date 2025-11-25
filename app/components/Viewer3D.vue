@@ -19,6 +19,7 @@ const showUCS = ref(true)
 const showGround = ref(true)
 const isPerspective = ref(true)
 const currentView = ref<'top' | 'bottom' | 'front' | 'back' | 'left' | 'right' | 'iso'>('iso')
+const viewMode = ref<'home' | 'fit'>('home')
 
 let scene: THREE.Scene
 let camera: THREE.PerspectiveCamera
@@ -216,11 +217,44 @@ onUnmounted(() => {
   renderer?.dispose()
 })
 
-const resetView = () => {
-  if (!controls || !camera) return
-  controls.reset()
-  camera.position.set(5, 5, 5)
-  camera.lookAt(0, 0, 0)
+// Toggle Home/Fit view
+const toggleHomeFit = () => {
+  if (!camera || !controls) return
+
+  if (viewMode.value === 'home') {
+    // Switch to Fit mode - zoom to fit all objects
+    viewMode.value = 'fit'
+    fitCameraToModel()
+  } else {
+    // Switch to Home mode - reset to isometric view
+    viewMode.value = 'home'
+    controls.reset()
+    camera.position.set(5, 5, 5)
+    camera.up.set(0, 1, 0)
+    camera.lookAt(0, 0, 0)
+    controls.update()
+  }
+}
+
+// Fit camera to view all objects in scene
+const fitCameraToModel = () => {
+  if (!camera || !controls || !currentModel) return
+
+  const box = new THREE.Box3().setFromObject(currentModel)
+  const size = box.getSize(new THREE.Vector3())
+  const center = box.getCenter(new THREE.Vector3())
+
+  const maxDim = Math.max(size.x, size.y, size.z)
+  const fov = camera.fov * (Math.PI / 180)
+  let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2))
+
+  cameraZ *= 1.5 // Add some padding
+
+  const direction = camera.position.clone().sub(controls.target).normalize()
+  camera.position.copy(center).add(direction.multiplyScalar(cameraZ))
+
+  controls.target.copy(center)
+  controls.update()
 }
 
 // Toggle Top/Bottom view
@@ -298,10 +332,6 @@ const toggleCameraMode = () => {
   camera.updateProjectionMatrix()
   controls.update()
 }
-
-defineExpose({
-  resetView
-})
 </script>
 
 <template>
@@ -331,8 +361,8 @@ defineExpose({
       </div>
     </div>
 
-    <!-- Engineering Control Panel (3x3 grid, bottom-right) -->
-    <div class="absolute bottom-4 right-4 z-10 bg-white rounded shadow p-2">
+    <!-- Engineering Control Panel (3x3 grid, top-right) -->
+    <div class="absolute top-4 right-4 z-10 bg-white rounded shadow p-2">
       <div class="grid grid-cols-3 gap-1">
         <!-- Row 1: Move, Rotate, UCS -->
         <button
@@ -372,13 +402,18 @@ defineExpose({
           UCS
         </button>
 
-        <!-- Row 2: Home, Top/Bottom, Ground -->
+        <!-- Row 2: Home/Fit, Top/Bottom, Ground -->
         <button
-          @click="resetView"
-          class="px-3 py-2 text-sm font-medium rounded hover:bg-yellow-100 transition-colors border-2 border-transparent"
-          title="Reset to isometric view"
+          @click="toggleHomeFit"
+          :class="[
+            'px-3 py-2 text-sm font-medium rounded transition-colors',
+            viewMode === 'fit'
+              ? 'bg-yellow-100 text-yellow-700 border-2 border-yellow-500'
+              : 'hover:bg-gray-100 border-2 border-transparent'
+          ]"
+          :title="viewMode === 'home' ? 'Zoom to fit model' : 'Reset to home view'"
         >
-          Home
+          {{ viewMode === 'home' ? 'Home' : 'Fit' }}
         </button>
         <button
           @click="toggleTopBottom"
