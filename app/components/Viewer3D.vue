@@ -11,6 +11,7 @@ const container = ref<HTMLDivElement | null>(null)
 const loadingProgress = ref(0)
 const isLoading = ref(false)
 const loadError = ref('')
+const transformMode = ref<'translate' | 'rotate' | 'hidden'>('translate')
 
 let scene: THREE.Scene
 let camera: THREE.PerspectiveCamera
@@ -149,9 +150,16 @@ const onResize = () => {
   renderer.setSize(container.value.clientWidth, container.value.clientHeight)
 }
 
-const toggleTransformMode = () => {
+const setTransformMode = (mode: 'translate' | 'rotate' | 'hidden') => {
+  transformMode.value = mode
   if (!transformControls) return
-  transformControls.setMode(transformControls.mode === 'translate' ? 'rotate' : 'translate')
+
+  if (mode === 'hidden') {
+    transformControls.visible = false
+  } else {
+    transformControls.visible = true
+    transformControls.setMode(mode)
+  }
 }
 
 onMounted(() => {
@@ -207,16 +215,50 @@ defineExpose({
 
     <!-- Controls -->
     <div class="absolute top-4 right-4 z-10 flex gap-2">
-      <button
-        @click="toggleTransformMode"
-        class="bg-white p-2 rounded shadow hover:bg-gray-100 transition-colors"
-        title="Toggle Move/Rotate mode"
-      >
-        Move/Rotate
-      </button>
+      <!-- Transform mode button group -->
+      <div class="bg-white rounded shadow flex">
+        <button
+          @click="setTransformMode('translate')"
+          :class="[
+            'px-3 py-2 transition-colors border-r border-gray-300',
+            transformMode === 'translate'
+              ? 'bg-blue-500 text-white'
+              : 'hover:bg-gray-100'
+          ]"
+          title="Move mode"
+        >
+          Move
+        </button>
+        <button
+          @click="setTransformMode('rotate')"
+          :class="[
+            'px-3 py-2 transition-colors border-r border-gray-300',
+            transformMode === 'rotate'
+              ? 'bg-blue-500 text-white'
+              : 'hover:bg-gray-100'
+          ]"
+          title="Rotate mode"
+        >
+          Rotate
+        </button>
+        <button
+          @click="setTransformMode('hidden')"
+          :class="[
+            'px-3 py-2 transition-colors',
+            transformMode === 'hidden'
+              ? 'bg-blue-500 text-white'
+              : 'hover:bg-gray-100'
+          ]"
+          title="Hide gizmo"
+        >
+          Hide
+        </button>
+      </div>
+
+      <!-- Home button -->
       <button
         @click="resetView"
-        class="bg-white p-2 rounded shadow hover:bg-gray-100 transition-colors"
+        class="bg-white px-3 py-2 rounded shadow hover:bg-gray-100 transition-colors"
         title="Reset camera view"
       >
         Home

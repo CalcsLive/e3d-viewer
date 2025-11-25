@@ -104,9 +104,8 @@ onMounted(async () => {
         </template>
       </ClientOnly>
 
-      <!-- Top bar with controls -->
-      <div class="absolute top-4 left-4 right-4 z-10 flex items-start justify-between gap-4">
-        <!-- Left: Back button -->
+      <!-- Top navigation bar -->
+      <div class="absolute top-4 left-4 z-10">
         <NuxtLink
           to="/"
           class="bg-gray-800 text-white px-4 py-2 rounded shadow hover:bg-gray-700 transition-colors flex items-center gap-2"
@@ -116,9 +115,11 @@ onMounted(async () => {
           </svg>
           Back
         </NuxtLink>
+      </div>
 
-        <!-- Right: Metadata panel -->
-        <div class="bg-gray-800 text-white px-4 py-3 rounded shadow max-w-sm">
+      <!-- Metadata panel - positioned below the Viewer3D controls to avoid overlap -->
+      <div class="absolute top-20 right-4 z-10">
+        <div class="bg-gray-800 text-white px-4 py-3 rounded shadow max-w-xs">
           <h3 v-if="metadata" class="font-semibold text-lg mb-2 truncate" :title="metadata.original_filename">
             {{ metadata.original_filename }}
           </h3>
@@ -133,7 +134,7 @@ onMounted(async () => {
           <!-- Share button -->
           <button
             @click="copyShareLink"
-            class="mt-3 w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition-colors flex items-center justify-center gap-2"
+            class="mt-3 w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition-colors flex items-center justify-center gap-2 text-sm"
           >
             <svg v-if="!showShareCopied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
