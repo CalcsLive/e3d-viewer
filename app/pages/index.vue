@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 
 const { uploadModel, checkDuplicate, getUserFolders } = use3DModel()
+const { signOut } = useAuth()
 const router = useRouter()
 const user = useSupabaseUser()
 
@@ -16,12 +17,30 @@ const folders = ref<string[]>([])
 const showDuplicateDialog = ref(false)
 const duplicateInfo = ref<any>(null)
 
-// Load user's folders
+// Load user's folders when user changes
+watch(user, async (newUser) => {
+  if (newUser) {
+    folders.value = await getUserFolders()
+  } else {
+    folders.value = []
+  }
+})
+
+// Load user's folders on mount
 onMounted(async () => {
   if (user.value) {
     folders.value = await getUserFolders()
   }
 })
+
+const handleLogout = async () => {
+  try {
+    await signOut()
+    router.push('/auth/login')
+  } catch (e: any) {
+    error.value = e.message || 'Logout failed'
+  }
+}
 
 const handleFileSelect = async (event: Event) => {
   const input = event.target as HTMLInputElement
@@ -108,9 +127,46 @@ const toggleNewFolder = () => {
 
 <template>
   <div class="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-4">
+    <!-- User menu in top-right corner -->
+    <div v-if="user" class="absolute top-4 right-4">
+      <div class="flex items-center gap-3 px-4 py-2 bg-gray-800 rounded-lg border border-gray-700">
+        <div class="text-sm">
+          <p class="text-gray-400">Signed in as</p>
+          <p class="font-medium">{{ user.email }}</p>
+        </div>
+        <button
+          @click="handleLogout"
+          class="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 rounded transition-colors"
+        >
+          Logout
+        </button>
+      </div>
+    </div>
+
     <h1 class="text-4xl font-bold mb-8 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
       E3D Viewer
     </h1>
+
+    <!-- Login prompt for non-authenticated users -->
+    <div v-if="!user" class="w-full max-w-md mb-6 p-4 bg-blue-900 bg-opacity-30 border border-blue-700 rounded-xl">
+      <p class="text-blue-300 text-sm mb-3">
+        You need to sign in to upload and manage 3D models.
+      </p>
+      <div class="flex gap-2">
+        <NuxtLink
+          to="/auth/login"
+          class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-center rounded-lg transition-colors"
+        >
+          Sign In
+        </NuxtLink>
+        <NuxtLink
+          to="/auth/signup"
+          class="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-center rounded-lg transition-colors"
+        >
+          Sign Up
+        </NuxtLink>
+      </div>
+    </div>
 
     <div class="w-full max-w-md p-8 bg-gray-800 rounded-xl shadow-2xl border border-gray-700">
       <div class="mb-6">

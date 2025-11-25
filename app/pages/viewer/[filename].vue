@@ -3,7 +3,10 @@ import { ref, onMounted, computed } from 'vue'
 import type { ModelMetadata } from '~/composables/use3DModel'
 
 const route = useRoute()
+const router = useRouter()
 const { getModelUrl, getModelMetadata } = use3DModel()
+const { signOut } = useAuth()
+const user = useSupabaseUser()
 
 const modelId = computed(() => route.params.filename as string)
 const metadata = ref<ModelMetadata | null>(null)
@@ -45,6 +48,16 @@ const copyShareLink = async () => {
   }
 }
 
+// Handle logout
+const handleLogout = async () => {
+  try {
+    await signOut()
+    router.push('/auth/login')
+  } catch (err) {
+    console.error('Logout failed:', err)
+  }
+}
+
 onMounted(async () => {
   try {
     loading.value = true
@@ -71,6 +84,46 @@ onMounted(async () => {
 
 <template>
   <div class="w-full h-screen bg-gray-900 relative">
+    <!-- User menu (top-left corner) -->
+    <div v-if="user" class="absolute top-4 left-4 z-20">
+      <div class="flex items-center gap-3 px-4 py-2 bg-gray-800 bg-opacity-90 rounded-lg border border-gray-700 backdrop-blur-sm">
+        <NuxtLink
+          to="/"
+          class="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 rounded transition-colors"
+        >
+          ← Home
+        </NuxtLink>
+        <div class="text-sm border-l border-gray-600 pl-3">
+          <p class="text-gray-400 text-xs">Signed in as</p>
+          <p class="font-medium text-white">{{ user.email }}</p>
+        </div>
+        <button
+          @click="handleLogout"
+          class="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 rounded transition-colors"
+        >
+          Logout
+        </button>
+      </div>
+    </div>
+
+    <!-- Login prompt for anonymous viewers -->
+    <div v-else class="absolute top-4 left-4 z-20">
+      <div class="flex items-center gap-2 px-4 py-2 bg-gray-800 bg-opacity-90 rounded-lg border border-gray-700 backdrop-blur-sm">
+        <NuxtLink
+          to="/"
+          class="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 rounded transition-colors"
+        >
+          ← Home
+        </NuxtLink>
+        <NuxtLink
+          to="/auth/login"
+          class="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 rounded transition-colors"
+        >
+          Sign In
+        </NuxtLink>
+      </div>
+    </div>
+
     <!-- Loading state -->
     <div v-if="loading" class="flex items-center justify-center h-full text-white">
       <div class="text-center">
