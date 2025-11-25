@@ -149,10 +149,10 @@ e3d-viewer/
 
 | Format | Color Support | Best For |
 |--------|--------------|----------|
-| **STL** | No (monochrome) | Simple geometry, legacy files |
 | **3MF** | **Yes - Full color** | Multi-material 3D printing, colored models |
 | **GLB** | **Yes - Full color + materials** | Engineering models, textured assets |
 | **GLTF** | **Yes - Full color + materials** | Web-optimized engineering models |
+| **STL** | No (monochrome) | Simple geometry, legacy files |
 
 ## Configuration
 
