@@ -81,13 +81,37 @@ Access at http://localhost:3000 (or alternative port if occupied)
 npm run build
 ```
 
+This creates the `dist/` directory with your production-ready application.
+
 ### 6. Deploy to Cloudflare Pages
+
+**Option A: Direct Deployment (CLI)**
 
 ```bash
 npm run deploy
 ```
 
-Or link your Git repository to Cloudflare Pages for automatic deployments.
+This will:
+1. Build your application
+2. Deploy to Cloudflare Pages using Wrangler
+3. Automatically create a new project on first deployment
+
+**Option B: Git-based Deployment (Recommended for Production)**
+
+1. Push your code to GitHub/GitLab
+2. Go to [Cloudflare Dashboard](https://dash.cloudflare.com/) → Pages
+3. Click "Create a project" → "Connect to Git"
+4. Select your repository
+5. Configure build settings:
+   - **Build command**: `npm run build`
+   - **Build output directory**: `dist`
+   - **Root directory**: `/` (or leave empty)
+6. Add environment variables:
+   - `SUPABASE_URL`: Your Supabase project URL
+   - `SUPABASE_KEY`: Your Supabase anonymous key
+7. Click "Save and Deploy"
+
+**Important**: After deployment, remember to set up environment variables in the Cloudflare Pages dashboard for your Supabase credentials.
 
 ## Project Structure
 
@@ -146,25 +170,42 @@ Required in `.env`:
 
 ## Troubleshooting
 
+**Deployment: ASSETS Binding Error**
+```
+Error: The name 'ASSETS' is reserved in Pages projects
+```
+- **Solution**: Use `npm run deploy` or `wrangler pages deploy dist`
+- **DO NOT** use `wrangler deploy` (that's for Workers, not Pages)
+- The project is configured for Cloudflare Pages, not Workers
+
 **Upload Failures**
 - Verify `.env` contains correct Supabase credentials
-- Confirm `3d-models` bucket exists and is public
-- Check storage quota limits
+- Confirm `3d-models` bucket exists and is **public**
+- Check storage quota limits in Supabase dashboard
+- Verify bucket CORS is configured to allow browser uploads
 
 **Model Won't Display**
 - Verify file is valid 3D model format
-- Check browser console for errors
-- Ensure Supabase bucket CORS is configured
+- Check browser console for loading errors
+- Ensure Supabase bucket is set to **public** access
+- Test the Supabase public URL directly in browser
 
 **Color Not Showing**
 - STL format does not support color - use 3MF or GLB/GLTF instead
-- Verify color data exists in source file
-- Check model was exported with color information
+- Verify color data exists in source file (check in another viewer)
+- Ensure model was exported with material/color information
 
 **Dev Server Issues**
 - Auto-selects alternative port if 3000 occupied
 - Ensure all dependencies installed: `npm install`
 - Verify `.env` file exists with valid credentials
+- Clear `.nuxt` cache: `rm -rf .nuxt` then rebuild
+
+**Environment Variables Not Working in Production**
+- Add environment variables in Cloudflare Pages dashboard
+- Go to Settings → Environment Variables
+- Add both `SUPABASE_URL` and `SUPABASE_KEY`
+- Redeploy after adding variables
 
 ## License
 
