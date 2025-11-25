@@ -1,0 +1,24 @@
+{
+	"name": "nuxt-on-cloudflare",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"build": "nuxt build",
+		"dev": "nuxt dev",
+		"generate": "nuxt generate",
+		"preview": "npm run build && wrangler dev",
+		"postinstall": "nuxt prepare",
+		"deploy": "npm run build && wrangler deploy",
+		"cf-typegen": "wrangler types"
+	},
+	"dependencies": {
+		"nuxt": "^4.2.1",
+		"vue": "^3.5.25",
+		"vue-router": "^4.6.3"
+	},
+	"devDependencies": {
+		"nitro-cloudflare-dev": "^0.2.2",
+		"nitropack": "^2.12.9",
+		"wrangler": "^4.50.0"
+	}
+}
