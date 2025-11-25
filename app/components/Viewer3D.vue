@@ -11,7 +11,14 @@ const container = ref<HTMLDivElement | null>(null)
 const loadingProgress = ref(0)
 const isLoading = ref(false)
 const loadError = ref('')
-const transformMode = ref<'translate' | 'rotate' | 'hidden'>('translate')
+
+// View controls state
+const showMoveGizmo = ref(true)
+const showRotateGizmo = ref(false)
+const showUCS = ref(true)
+const showGround = ref(true)
+const isPerspective = ref(true)
+const currentView = ref<'top' | 'bottom' | 'front' | 'back' | 'left' | 'right' | 'iso'>('iso')
 
 let scene: THREE.Scene
 let camera: THREE.PerspectiveCamera
@@ -49,14 +56,17 @@ const init = () => {
   transformControls.addEventListener('dragging-changed', (event) => {
     controls.enabled = !event.value
   })
+  transformControls.setMode('translate')
   scene.add(transformControls)
 
-  // Grid
+  // Grid (ground)
   const gridHelper = new THREE.GridHelper(10, 10)
+  gridHelper.name = 'ground'
   scene.add(gridHelper)
 
-  // Axes
+  // Axes (UCS - User Coordinate System)
   const axesHelper = new THREE.AxesHelper(5)
+  axesHelper.name = 'ucs'
   scene.add(axesHelper)
 
   animate()
@@ -150,16 +160,48 @@ const onResize = () => {
   renderer.setSize(container.value.clientWidth, container.value.clientHeight)
 }
 
-const setTransformMode = (mode: 'translate' | 'rotate' | 'hidden') => {
-  transformMode.value = mode
-  if (!transformControls) return
+// Toggle Move gizmo
+const toggleMove = () => {
+  showMoveGizmo.value = !showMoveGizmo.value
+  if (showRotateGizmo.value) showRotateGizmo.value = false
 
-  if (mode === 'hidden') {
-    transformControls.visible = false
-  } else {
+  if (!transformControls) return
+  if (showMoveGizmo.value) {
+    transformControls.setMode('translate')
     transformControls.visible = true
-    transformControls.setMode(mode)
+  } else {
+    transformControls.visible = false
   }
+}
+
+// Toggle Rotate gizmo
+const toggleRotate = () => {
+  showRotateGizmo.value = !showRotateGizmo.value
+  if (showMoveGizmo.value) showMoveGizmo.value = false
+
+  if (!transformControls) return
+  if (showRotateGizmo.value) {
+    transformControls.setMode('rotate')
+    transformControls.visible = true
+  } else {
+    transformControls.visible = false
+  }
+}
+
+// Toggle UCS (axes)
+const toggleUCS = () => {
+  showUCS.value = !showUCS.value
+  if (!scene) return
+  const axes = scene.getObjectByName('ucs')
+  if (axes) axes.visible = showUCS.value
+}
+
+// Toggle Ground (grid)
+const toggleGround = () => {
+  showGround.value = !showGround.value
+  if (!scene) return
+  const grid = scene.getObjectByName('ground')
+  if (grid) grid.visible = showGround.value
 }
 
 onMounted(() => {
@@ -179,6 +221,82 @@ const resetView = () => {
   controls.reset()
   camera.position.set(5, 5, 5)
   camera.lookAt(0, 0, 0)
+}
+
+// Toggle Top/Bottom view
+const toggleTopBottom = () => {
+  if (!camera || !controls) return
+  const distance = 10
+
+  if (currentView.value === 'top') {
+    currentView.value = 'bottom'
+    camera.position.set(0, -distance, 0)
+    camera.up.set(0, 0, 1)
+  } else {
+    currentView.value = 'top'
+    camera.position.set(0, distance, 0)
+    camera.up.set(0, 0, -1)
+  }
+  camera.lookAt(0, 0, 0)
+  controls.update()
+}
+
+// Toggle Front/Back view
+const toggleFrontBack = () => {
+  if (!camera || !controls) return
+  const distance = 10
+
+  if (currentView.value === 'front') {
+    currentView.value = 'back'
+    camera.position.set(0, 0, -distance)
+  } else {
+    currentView.value = 'front'
+    camera.position.set(0, 0, distance)
+  }
+  camera.up.set(0, 1, 0)
+  camera.lookAt(0, 0, 0)
+  controls.update()
+}
+
+// Toggle Left/Right view
+const toggleLeftRight = () => {
+  if (!camera || !controls) return
+  const distance = 10
+
+  if (currentView.value === 'left') {
+    currentView.value = 'right'
+    camera.position.set(distance, 0, 0)
+  } else {
+    currentView.value = 'left'
+    camera.position.set(-distance, 0, 0)
+  }
+  camera.up.set(0, 1, 0)
+  camera.lookAt(0, 0, 0)
+  controls.update()
+}
+
+// Toggle between perspective and orthographic camera
+const toggleCameraMode = () => {
+  if (!camera || !renderer || !container.value) return
+
+  isPerspective.value = !isPerspective.value
+
+  const position = camera.position.clone()
+  const target = controls.target.clone()
+
+  // For now, we'll keep using perspective camera but adjust FOV for ortho-like effect
+  // A full implementation would swap between PerspectiveCamera and OrthographicCamera
+  if (!isPerspective.value) {
+    // Simulate orthographic by reducing FOV and moving camera back
+    camera.fov = 15
+    const newDistance = camera.position.length() * 3
+    camera.position.normalize().multiplyScalar(newDistance)
+  } else {
+    camera.fov = 75
+  }
+
+  camera.updateProjectionMatrix()
+  controls.update()
 }
 
 defineExpose({
@@ -213,56 +331,118 @@ defineExpose({
       </div>
     </div>
 
-    <!-- Controls -->
-    <div class="absolute top-4 right-4 z-10 flex gap-2">
-      <!-- Transform mode button group -->
-      <div class="bg-white rounded shadow flex">
+    <!-- Engineering Control Panel (3x3 grid, bottom-right) -->
+    <div class="absolute bottom-4 right-4 z-10 bg-white rounded shadow p-2">
+      <div class="grid grid-cols-3 gap-1">
+        <!-- Row 1: Move, Rotate, UCS -->
         <button
-          @click="setTransformMode('translate')"
+          @click="toggleMove"
           :class="[
-            'px-3 py-2 transition-colors border-r border-gray-300',
-            transformMode === 'translate'
-              ? 'bg-blue-500 text-white'
-              : 'hover:bg-gray-100'
+            'px-3 py-2 text-sm font-medium rounded transition-colors',
+            showMoveGizmo
+              ? 'bg-blue-100 text-blue-700 border-2 border-blue-500'
+              : 'hover:bg-gray-100 border-2 border-transparent'
           ]"
-          title="Move mode"
+          title="Toggle Move gizmo"
         >
           Move
         </button>
         <button
-          @click="setTransformMode('rotate')"
+          @click="toggleRotate"
           :class="[
-            'px-3 py-2 transition-colors border-r border-gray-300',
-            transformMode === 'rotate'
-              ? 'bg-blue-500 text-white'
-              : 'hover:bg-gray-100'
+            'px-3 py-2 text-sm font-medium rounded transition-colors',
+            showRotateGizmo
+              ? 'bg-red-100 text-red-700 border-2 border-red-500'
+              : 'hover:bg-gray-100 border-2 border-transparent'
           ]"
-          title="Rotate mode"
+          title="Toggle Rotate gizmo"
         >
           Rotate
         </button>
         <button
-          @click="setTransformMode('hidden')"
+          @click="toggleUCS"
           :class="[
-            'px-3 py-2 transition-colors',
-            transformMode === 'hidden'
-              ? 'bg-blue-500 text-white'
-              : 'hover:bg-gray-100'
+            'px-3 py-2 text-sm font-medium rounded transition-colors',
+            showUCS
+              ? 'bg-blue-100 text-blue-700 border-2 border-blue-500'
+              : 'hover:bg-gray-100 border-2 border-transparent'
           ]"
-          title="Hide gizmo"
+          title="Toggle UCS (axes)"
         >
-          Hide
+          UCS
+        </button>
+
+        <!-- Row 2: Home, Top/Bottom, Ground -->
+        <button
+          @click="resetView"
+          class="px-3 py-2 text-sm font-medium rounded hover:bg-yellow-100 transition-colors border-2 border-transparent"
+          title="Reset to isometric view"
+        >
+          Home
+        </button>
+        <button
+          @click="toggleTopBottom"
+          :class="[
+            'px-3 py-2 text-sm font-medium rounded transition-colors',
+            currentView === 'top' || currentView === 'bottom'
+              ? 'bg-green-100 text-green-700 border-2 border-green-500'
+              : 'hover:bg-gray-100 border-2 border-transparent'
+          ]"
+          :title="currentView === 'top' ? 'Switch to Bottom view' : 'Switch to Top view'"
+        >
+          {{ currentView === 'top' ? 'Top' : currentView === 'bottom' ? 'Bottom' : 'Top/Bottom' }}
+        </button>
+        <button
+          @click="toggleGround"
+          :class="[
+            'px-3 py-2 text-sm font-medium rounded transition-colors',
+            showGround
+              ? 'bg-yellow-100 text-yellow-700 border-2 border-yellow-500'
+              : 'hover:bg-gray-100 border-2 border-transparent'
+          ]"
+          title="Toggle ground grid"
+        >
+          Ground
+        </button>
+
+        <!-- Row 3: Left/Right, Front/Back, Ortho/Perspective -->
+        <button
+          @click="toggleLeftRight"
+          :class="[
+            'px-3 py-2 text-sm font-medium rounded transition-colors',
+            currentView === 'left' || currentView === 'right'
+              ? 'bg-green-100 text-green-700 border-2 border-green-500'
+              : 'hover:bg-gray-100 border-2 border-transparent'
+          ]"
+          :title="currentView === 'left' ? 'Switch to Right view' : 'Switch to Left view'"
+        >
+          {{ currentView === 'left' ? 'Left' : currentView === 'right' ? 'Right' : 'Left/Right' }}
+        </button>
+        <button
+          @click="toggleFrontBack"
+          :class="[
+            'px-3 py-2 text-sm font-medium rounded transition-colors',
+            currentView === 'front' || currentView === 'back'
+              ? 'bg-green-100 text-green-700 border-2 border-green-500'
+              : 'hover:bg-gray-100 border-2 border-transparent'
+          ]"
+          :title="currentView === 'front' ? 'Switch to Back view' : 'Switch to Front view'"
+        >
+          {{ currentView === 'front' ? 'Front' : currentView === 'back' ? 'Back' : 'Front/Back' }}
+        </button>
+        <button
+          @click="toggleCameraMode"
+          :class="[
+            'px-3 py-2 text-sm font-medium rounded transition-colors',
+            !isPerspective
+              ? 'bg-yellow-100 text-yellow-700 border-2 border-yellow-500'
+              : 'hover:bg-gray-100 border-2 border-transparent'
+          ]"
+          :title="isPerspective ? 'Switch to Orthographic' : 'Switch to Perspective'"
+        >
+          {{ isPerspective ? 'Ortho' : 'Persp' }}
         </button>
       </div>
-
-      <!-- Home button -->
-      <button
-        @click="resetView"
-        class="bg-white px-3 py-2 rounded shadow hover:bg-gray-100 transition-colors"
-        title="Reset camera view"
-      >
-        Home
-      </button>
     </div>
   </div>
 </template>

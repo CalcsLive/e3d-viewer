@@ -117,15 +117,15 @@ onMounted(async () => {
         </NuxtLink>
       </div>
 
-      <!-- Metadata panel - positioned below the Viewer3D controls to avoid overlap -->
-      <div class="absolute top-20 right-4 z-10">
-        <div class="bg-gray-800 text-white px-4 py-3 rounded shadow max-w-xs">
-          <h3 v-if="metadata" class="font-semibold text-lg mb-2 truncate" :title="metadata.original_filename">
+      <!-- Metadata panel - positioned above the control panel at bottom-right -->
+      <div class="absolute bottom-64 right-4 z-10">
+        <div class="bg-gray-800 text-white px-3 py-2 rounded shadow max-w-xs">
+          <h3 v-if="metadata" class="font-semibold text-sm mb-1 truncate" :title="metadata.original_filename">
             {{ metadata.original_filename }}
           </h3>
-          <h3 v-else class="font-semibold text-lg mb-2">3D Model</h3>
+          <h3 v-else class="font-semibold text-sm mb-1">3D Model</h3>
 
-          <div v-if="metadata" class="text-sm text-gray-400 space-y-1">
+          <div v-if="metadata" class="text-xs text-gray-400 space-y-0.5">
             <p><span class="text-gray-500">Format:</span> {{ metadata.file_type.toUpperCase() }}</p>
             <p><span class="text-gray-500">Size:</span> {{ formatFileSize(metadata.file_size) }}</p>
             <p><span class="text-gray-500">Uploaded:</span> {{ formatDate(metadata.uploaded_at) }}</p>
@@ -134,15 +134,15 @@ onMounted(async () => {
           <!-- Share button -->
           <button
             @click="copyShareLink"
-            class="mt-3 w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition-colors flex items-center justify-center gap-2 text-sm"
+            class="mt-2 w-full bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded transition-colors flex items-center justify-center gap-2 text-xs"
           >
-            <svg v-if="!showShareCopied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg v-if="!showShareCopied" class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
             </svg>
-            <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg v-else class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
             </svg>
-            {{ showShareCopied ? 'Link Copied!' : 'Share Link' }}
+            {{ showShareCopied ? 'Copied!' : 'Share' }}
           </button>
         </div>
       </div>
