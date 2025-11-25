@@ -49,17 +49,16 @@ onMounted(async () => {
   try {
     loading.value = true
 
-    // Try to fetch metadata first
+    // Fetch metadata by model ID
     const meta = await getModelMetadata(modelId.value)
 
     if (meta) {
-      // Use metadata
+      // Use metadata to get model URL
       metadata.value = meta
       modelUrl.value = getModelUrl(meta.storage_path)
     } else {
-      // Fallback: assume it's a legacy path or direct storage path
-      const decodedPath = decodeURIComponent(modelId.value)
-      modelUrl.value = getModelUrl(decodedPath)
+      // Model not found
+      error.value = 'Model not found. It may have been deleted.'
     }
   } catch (e: any) {
     error.value = e.message || 'Failed to load model'
