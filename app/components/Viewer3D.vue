@@ -8,6 +8,10 @@ const props = defineProps<{
 }>()
 
 const container = ref<HTMLDivElement | null>(null)
+const loadingProgress = ref(0)
+const isLoading = ref(false)
+const loadError = ref('')
+
 let scene: THREE.Scene
 let camera: THREE.PerspectiveCamera
 let renderer: THREE.WebGLRenderer
@@ -59,7 +63,11 @@ const init = () => {
 
 const loadModel = async (url: string) => {
   if (!scene) return
-  
+
+  isLoading.value = true
+  loadingProgress.value = 0
+  loadError.value = ''
+
   // Clear previous model
   if (currentModel) {
     scene.remove(currentModel)
@@ -68,24 +76,33 @@ const loadModel = async (url: string) => {
   }
 
   const extension = url.split('.').pop()?.toLowerCase()
-  
+
   try {
     let geometry: THREE.BufferGeometry | THREE.Group
-    
+
+    // Create loading manager for progress tracking
+    const loadingManager = new THREE.LoadingManager()
+    loadingManager.onProgress = (url, loaded, total) => {
+      if (total > 0) {
+        loadingProgress.value = Math.round((loaded / total) * 100)
+      }
+    }
+
     if (extension === 'stl') {
-      const loader = new STLLoader()
+      const loader = new STLLoader(loadingManager)
       geometry = await loader.loadAsync(url)
       const material = new THREE.MeshStandardMaterial({ color: 0x606060 })
       currentModel = new THREE.Mesh(geometry, material)
     } else if (extension === '3mf') {
-      const loader = new ThreeMFLoader()
+      const loader = new ThreeMFLoader(loadingManager)
       const group = await loader.loadAsync(url)
       currentModel = group
     } else if (extension === 'glb' || extension === 'gltf') {
-      const loader = new GLTFLoader()
+      const loader = new GLTFLoader(loadingManager)
       const gltf = await loader.loadAsync(url)
       currentModel = gltf.scene
     } else {
+      loadError.value = `Unsupported file format: ${extension}`
       console.warn('Unsupported file format:', extension)
       return
     }
@@ -95,19 +112,23 @@ const loadModel = async (url: string) => {
       const box = new THREE.Box3().setFromObject(currentModel)
       const center = box.getCenter(new THREE.Vector3())
       const size = box.getSize(new THREE.Vector3())
-      
+
       const maxDim = Math.max(size.x, size.y, size.z)
       const scale = 5 / maxDim
       currentModel.scale.setScalar(scale)
-      
+
       currentModel.position.sub(center.multiplyScalar(scale))
       currentModel.position.y += size.y * scale / 2 // Sit on grid
 
       scene.add(currentModel)
       transformControls.attach(currentModel)
     }
-  } catch (error) {
+  } catch (error: any) {
+    loadError.value = error.message || 'Failed to load 3D model'
     console.error('Error loading model:', error)
+  } finally {
+    isLoading.value = false
+    loadingProgress.value = 100
   }
 }
 
@@ -159,11 +180,45 @@ defineExpose({
 
 <template>
   <div ref="container" class="w-full h-full relative">
+    <!-- Loading overlay -->
+    <div
+      v-if="isLoading"
+      class="absolute inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-20"
+    >
+      <div class="text-center text-white">
+        <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4"></div>
+        <p class="text-lg mb-2">Loading 3D Model...</p>
+        <p class="text-sm text-gray-400">{{ loadingProgress }}%</p>
+      </div>
+    </div>
+
+    <!-- Error overlay -->
+    <div
+      v-if="loadError"
+      class="absolute inset-0 bg-gray-900 bg-opacity-90 flex items-center justify-center z-20"
+    >
+      <div class="text-center text-white max-w-md px-4">
+        <svg class="w-16 h-16 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <p class="text-lg">{{ loadError }}</p>
+      </div>
+    </div>
+
+    <!-- Controls -->
     <div class="absolute top-4 right-4 z-10 flex gap-2">
-      <button @click="toggleTransformMode" class="bg-white p-2 rounded shadow hover:bg-gray-100">
+      <button
+        @click="toggleTransformMode"
+        class="bg-white p-2 rounded shadow hover:bg-gray-100 transition-colors"
+        title="Toggle Move/Rotate mode"
+      >
         Move/Rotate
       </button>
-      <button @click="resetView" class="bg-white p-2 rounded shadow hover:bg-gray-100">
+      <button
+        @click="resetView"
+        class="bg-white p-2 rounded shadow hover:bg-gray-100 transition-colors"
+        title="Reset camera view"
+      >
         Home
       </button>
     </div>
