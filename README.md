@@ -116,7 +116,7 @@ This will:
 ## Project Structure
 
 ```
-nuxt-on-cloudflare/
+e3d-viewer/
 ├── app/
 │   ├── assets/css/
 │   │   └── main.css              # Tailwind styles

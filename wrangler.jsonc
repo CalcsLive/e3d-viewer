@@ -4,7 +4,7 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "nuxt-on-cloudflare",
+	"name": "e3d-viewer",
 	"compatibility_date": "2025-11-25",
 	"observability": {
 		"enabled": true
