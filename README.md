@@ -63,11 +63,25 @@ SUPABASE_KEY=your_supabase_anon_key
 In your Supabase project:
 
 1. Navigate to **Storage** section
-2. Create a new bucket named `3d-models`
-3. Set bucket to **public** (or configure RLS policies as needed)
-4. The app automatically creates a `models/` folder on first upload
+2. Create a new bucket named `e3d-models`
+3. Set bucket to **public**
+4. The app automatically organizes files by user in `users/{user_id}/` folders
 
-### 4. Development Server
+### 4. Set Up Supabase Database
+
+Run the migration script in your Supabase SQL Editor:
+
+1. Navigate to **SQL Editor** in Supabase dashboard
+2. Copy contents of `supabase-migration-update.sql`
+3. Execute the script to create the `e3d_models` table with folder support
+4. This enables:
+   - User ownership and authentication
+   - Folder organization (unlimited nesting)
+   - File deduplication within folders
+   - Metadata tracking (title, description, tags)
+   - Privacy controls (public/private models)
+
+### 5. Development Server
 
 ```bash
 npm run dev
@@ -75,7 +89,7 @@ npm run dev
 
 Access at http://localhost:3000 (or alternative port if occupied)
 
-### 5. Build for Production
+### 6. Build for Production
 
 ```bash
 npm run build
@@ -83,7 +97,7 @@ npm run build
 
 This creates the `dist/` directory with your production-ready application.
 
-### 6. Deploy to Cloudflare Pages
+### 7. Deploy to Cloudflare Pages
 
 **Option A: Direct Deployment (CLI)**
 
@@ -180,9 +194,11 @@ Error: The name 'ASSETS' is reserved in Pages projects
 
 **Upload Failures**
 - Verify `.env` contains correct Supabase credentials
-- Confirm `3d-models` bucket exists and is **public**
+- Confirm `e3d-models` bucket exists and is **public**
+- Ensure user is authenticated (uploads require login)
 - Check storage quota limits in Supabase dashboard
 - Verify bucket CORS is configured to allow browser uploads
+- Run the database migration script if not already done
 
 **Model Won't Display**
 - Verify file is valid 3D model format
