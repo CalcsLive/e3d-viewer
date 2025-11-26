@@ -49,11 +49,11 @@ export const use3DModel = () => {
         file: File,
         folderPath: string = ''
     ): Promise<DuplicateCheckResult> => {
-        if (!user.value?.id) {
+        const userId = user.value?.id || user.value?.sub
+
+        if (!userId) {
             return { isDuplicate: false }
         }
-
-        const userId = user.value.id
         const filename = file.name
         const fileSize = file.size
 
@@ -123,7 +123,12 @@ export const use3DModel = () => {
             onProgress?: (progress: number) => void
         } = {}
     ): Promise<{ id: string; path: string; url: string; metadata: ModelMetadata }> => {
-        if (!user.value?.id) {
+        // Get user ID from Supabase user object
+        // The user object from useSupabaseUser() contains the JWT claims
+        // The user ID is in the 'sub' (subject) field, not 'id'
+        const userId = user.value?.id || user.value?.sub
+
+        if (!userId) {
             throw new Error('User must be authenticated to upload models')
         }
 
@@ -135,8 +140,6 @@ export const use3DModel = () => {
             isPublic = false,
             onProgress
         } = options
-
-        const userId = user.value.id
         const modelId = generateModelId()
         const fileExt = file.name.split('.').pop()?.toLowerCase() || 'unknown'
         const fileName = `${modelId}.${fileExt}`
@@ -226,12 +229,14 @@ export const use3DModel = () => {
 
     // Get user's folder structure
     const getUserFolders = async (): Promise<string[]> => {
-        if (!user.value?.id) return []
+        const userId = user.value?.id || user.value?.sub
+
+        if (!userId) return []
 
         const { data, error } = await supabase
             .from('e3d_models')
             .select('folder_path')
-            .eq('user_id', user.value.id)
+            .eq('user_id', userId)
 
         if (error || !data) return []
 

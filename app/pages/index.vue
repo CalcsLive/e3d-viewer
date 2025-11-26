@@ -49,6 +49,13 @@ const handleFileSelect = async (event: Event) => {
   const file = input.files[0]
   if (!file) return
 
+  // Check authentication first
+  if (!user.value) {
+    error.value = 'Please sign in to upload models'
+    router.push('/auth/login')
+    return
+  }
+
   selectedFile.value = file
   error.value = ''
 
@@ -99,7 +106,7 @@ const performUpload = async () => {
 
     const result = await uploadModel(selectedFile.value, {
       folderPath,
-      isPublic: false,
+      isPublic: true,  // Default to public for easy sharing
       onProgress: (progress) => {
         uploadProgress.value = progress
       }
@@ -214,8 +221,11 @@ const toggleNewFolder = () => {
       </div>
 
       <label
-        class="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-600 border-dashed rounded-lg cursor-pointer hover:bg-gray-700 transition-colors relative overflow-hidden"
-        :class="{ 'opacity-50 cursor-not-allowed': uploading }"
+        class="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-600 border-dashed rounded-lg transition-colors relative overflow-hidden"
+        :class="{
+          'opacity-50 cursor-not-allowed': uploading || !user,
+          'cursor-pointer hover:bg-gray-700': user && !uploading
+        }"
       >
         <!-- Progress bar background -->
         <div
@@ -229,13 +239,16 @@ const toggleNewFolder = () => {
           <div v-else class="animate-spin rounded-full h-10 w-10 border-b-2 border-white mb-3"></div>
 
           <p class="mb-2 text-sm text-gray-400">
-            <span class="font-semibold">{{ uploading ? 'Uploading...' : 'Click to upload' }}</span>
+            <span class="font-semibold">
+              {{ uploading ? 'Uploading...' : user ? 'Click to upload' : 'Sign in to upload' }}
+            </span>
           </p>
           <p v-if="uploading && uploadProgress > 0" class="text-xs text-gray-500">
             {{ uploadProgress }}%
           </p>
         </div>
         <input
+          v-if="user"
           type="file"
           class="hidden"
           accept=".stl,.3mf,.glb,.gltf"
