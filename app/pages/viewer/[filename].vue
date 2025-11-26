@@ -86,12 +86,18 @@ onMounted(async () => {
   <div class="w-full h-screen bg-gray-900 relative">
     <!-- User menu (top-left corner) -->
     <div v-if="user" class="absolute top-4 left-4 z-20">
-      <div class="flex items-center gap-3 px-4 py-2 bg-gray-800 bg-opacity-90 rounded-lg border border-gray-700 backdrop-blur-sm">
+      <div class="flex items-center gap-2 px-4 py-2 bg-gray-800 bg-opacity-90 rounded-lg border border-gray-700 backdrop-blur-sm">
         <NuxtLink
           to="/"
           class="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 rounded transition-colors"
         >
-          ← Home
+          Upload
+        </NuxtLink>
+        <NuxtLink
+          to="/dashboard"
+          class="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 rounded transition-colors"
+        >
+          My Models
         </NuxtLink>
         <div class="text-sm border-l border-gray-600 pl-3">
           <p class="text-gray-400 text-xs">Signed in as</p>
@@ -113,7 +119,7 @@ onMounted(async () => {
           to="/"
           class="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 rounded transition-colors"
         >
-          ← Home
+          Upload
         </NuxtLink>
         <NuxtLink
           to="/auth/login"

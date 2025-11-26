@@ -137,7 +137,13 @@ const toggleNewFolder = () => {
     <!-- User menu in top-right corner -->
     <div v-if="user" class="absolute top-4 right-4">
       <div class="flex items-center gap-3 px-4 py-2 bg-gray-800 rounded-lg border border-gray-700">
-        <div class="text-sm">
+        <NuxtLink
+          to="/dashboard"
+          class="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 rounded transition-colors"
+        >
+          My Models
+        </NuxtLink>
+        <div class="text-sm border-l border-gray-600 pl-3">
           <p class="text-gray-400">Signed in as</p>
           <p class="font-medium">{{ user.email }}</p>
         </div>
