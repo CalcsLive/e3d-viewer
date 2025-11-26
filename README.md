@@ -4,18 +4,55 @@ A professional 3D model viewer built with Nuxt 4, Three.js, and Supabase, design
 
 ## Features
 
-- **Multi-format Support with Full Color Fidelity**
-  - STL (monochrome)
-  - **3MF** - Full color support for multi-material 3D printing models
-  - **GLB/GLTF** - Complete color and material data preservation for engineering models
-- **Interactive 3D Viewer**
-  - Orbit controls (rotate, pan, zoom)
-  - Transform controls (move and rotate objects)
-  - Grid and axes helpers for spatial reference
-  - Automatic model centering and scaling
-- **Cloud Storage** via Supabase for easy model sharing
-- **Cloudflare Pages** deployment for global edge performance
-- Modern gradient UI with Tailwind CSS
+### **Multi-format Support with Full Color Fidelity**
+- STL (monochrome)
+- **3MF** - Full color support for multi-material 3D printing models
+- **GLB/GLTF** - Complete color and material data preservation for engineering models
+
+### **User Authentication & Management**
+- Secure email/password authentication via Supabase Auth
+- User signup, login, and password recovery
+- Session management across pages
+- Public model sharing (no login required to view)
+
+### **Interactive 3D Viewer**
+- Professional CAD-style view controls (Top/Bottom, Front/Back, Left/Right)
+- Perspective/Orthographic camera modes
+- Move and Rotate gizmos for model manipulation
+- Home/Fit zoom controls
+- Grid and axes helpers for spatial reference
+- Automatic model centering and scaling
+- Orbit controls (rotate, pan, zoom)
+
+### **Model Management Dashboard**
+- Grid view of all user's models
+- Real-time search (filename, title, tags)
+- Folder filtering
+- Quick actions: View, Share, Delete
+- Model metadata display (size, format, upload date)
+
+### **Folder Organization**
+- Unlimited nested folder structure
+- Organize models by project, client, or custom categories
+- Virtual folders (e.g., `clients/acme/parts/revision-2`)
+- Folder selector during upload
+
+### **File Deduplication**
+- Hybrid approach: Quick filename+size check, then SHA-256 hash
+- Prevents accidental duplicate uploads within same folder
+- Detects truly identical files even if renamed
+
+### **Public Link Sharing**
+- Share models via simple URL
+- Anonymous viewing (no login required)
+- Copy shareable link from dashboard or viewer
+- Models default to public for easy collaboration
+
+### **Cloud Infrastructure**
+- Supabase Storage for scalable file hosting
+- Supabase Database for metadata tracking
+- Row Level Security (RLS) for data protection
+- Cloudflare Pages deployment for global edge performance
 
 ## Why Color Support Matters
 
@@ -133,31 +170,61 @@ This will:
 e3d-viewer/
 ├── app/
 │   ├── assets/css/
-│   │   └── main.css              # Tailwind styles
+│   │   └── main.css                  # Tailwind styles
 │   ├── components/
-│   │   └── Viewer3D.vue          # Three.js viewer component
+│   │   └── Viewer3D.vue              # Three.js viewer component
 │   ├── composables/
-│   │   ├── use3DModel.ts         # Model upload/storage logic
-│   │   └── useSupabase.ts        # Supabase client
+│   │   ├── use3DModel.ts             # Model upload/storage/deduplication
+│   │   ├── useAuth.ts                # Authentication helpers
+│   │   └── useSupabase.ts            # Supabase client
 │   ├── pages/
-│   │   ├── index.vue             # Upload interface
-│   │   └── viewer/[filename].vue # 3D viewer page
+│   │   ├── index.vue                 # Upload interface
+│   │   ├── dashboard.vue             # My Models dashboard
+│   │   ├── viewer/[filename].vue     # 3D viewer page
+│   │   └── auth/
+│   │       ├── login.vue             # Login page
+│   │       ├── signup.vue            # Signup page
+│   │       └── forgot-password.vue   # Password recovery
 │   └── app.vue
-├── nuxt.config.ts                # Nuxt configuration
-├── tailwind.config.ts            # Tailwind config
-└── wrangler.jsonc                # Cloudflare config
+├── nuxt.config.ts                    # Nuxt configuration
+├── tailwind.config.ts                # Tailwind config
+├── wrangler.jsonc                    # Cloudflare config
+├── supabase-migration-update.sql     # Database schema migration
+├── SUPABASE_SETUP.md                 # Detailed Supabase setup guide
+└── CLAUDE.md                         # Implementation details & roadmap
 ```
 
 ## Usage
 
-1. **Upload**: Click or drag a 3D model file on the home page
-2. **View**: Automatically redirected to the interactive viewer
-3. **Controls**:
-   - **Left drag**: Rotate view
-   - **Right drag**: Pan view
+### **Upload Models**
+1. Navigate to home page (Upload)
+2. Sign in if not already authenticated
+3. Select a folder (optional) or create new folder
+4. Click upload area and select 3D model file (STL, 3MF, GLB, GLTF)
+5. Automatically redirected to interactive viewer
+6. Model is saved and appears in "My Models" dashboard
+
+### **View Models**
+1. **From Dashboard**: Click "View" on any model card
+2. **From Link**: Share link with anyone (no login required)
+3. **3D Viewer Controls**:
+   - **Mouse drag**: Rotate view
+   - **Right-click drag**: Pan view
    - **Scroll**: Zoom in/out
-   - **Move/Rotate button**: Toggle transform mode
-   - **Home button**: Reset camera to default
+   - **Move/Rotate buttons**: Toggle gizmo mode
+   - **View buttons**: Switch to Top/Bottom/Front/Back/Left/Right views
+   - **Ortho/Persp**: Toggle camera projection mode
+   - **Home/Fit**: Reset camera or fit model to view
+   - **UCS/Ground**: Toggle axes and grid display
+
+### **Manage Models**
+1. Click "My Models" from any page
+2. **Search**: Type to filter by filename or tags
+3. **Filter**: Select folder from dropdown
+4. **Actions**:
+   - **View**: Open in 3D viewer
+   - **Share**: Copy shareable link to clipboard
+   - **Delete**: Remove model (with confirmation)
 
 ## Supported Formats
 
