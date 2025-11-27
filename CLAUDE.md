@@ -51,10 +51,10 @@ E3D Viewer is a professional 3D model viewer and management platform designed fo
 ### ✅ **3D Model Upload**
 
 #### Supported Formats
-- **STL** - Standard Tessellation Language (monochrome)
 - **3MF** - 3D Manufacturing Format (full color, multi-material)
 - **GLB** - Binary glTF (full color, materials, textures)
 - **GLTF** - glTF JSON (full color, materials, textures)
+- **STL** - Standard Tessellation Language (monochrome)
 
 #### Upload Features
 - Drag-and-drop or click to select file
