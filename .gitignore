@@ -31,3 +31,8 @@ logs
 # .e3d
 .e3d
 Log.md
+
+# Private documentation and setup files
+CLAUDE.md
+SUPABASE_SETUP.md
+*.sql

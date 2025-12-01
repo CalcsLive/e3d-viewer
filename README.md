@@ -2,6 +2,10 @@
 
 A professional 3D model viewer built with Nuxt 4, Three.js, and Supabase, designed for engineering model review and 3D printing preparation. Deployed on Cloudflare Pages for fast global access.
 
+**🚀 Live Demo:** [https://e3d.calcs.live](https://e3d.calcs.live/viewer/fwt4qufi)
+
+![E3D Viewer Screenshot](public/images/lightweight-glb-3mf-stl-web-viewer-for-review-engineering-v0-bqg198bd1g4g1.webp)
+
 ## Features
 
 ### **Multi-format Support with Full Color Fidelity**
